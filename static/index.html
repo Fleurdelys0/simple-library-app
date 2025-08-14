@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kütüphane</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <!-- Arka Plan Efekti -->
+    <canvas id="particles"></canvas>
+
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-book-open"></i> Kütüphane</h1>
+        </header>
+
+        <div class="main-content">
+            <!-- Sol Taraf: İşlemler -->
+            <aside class="operations-section">
+                <div class="card">
+                    <h2><i class="fas fa-plus-circle"></i> Yeni Kitap Ekle</h2>
+                    <div class="form-group">
+                        <label for="isbn"><i class="fas fa-barcode"></i> ISBN ile Otomatik Ekle</label>
+                        <input type="text" id="isbn" placeholder="978-975-07-3589-3">
+                        <button id="addByIsbnBtn" class="btn"><i class="fas fa-plus"></i> Ekle</button>
+                    </div>
+                </div>
+                <div class="card" id="statsCard">
+                    <!-- İstatistikler buraya gelecek -->
+                </div>
+            </aside>
+
+            <!-- Sağ Taraf: Katalog -->
+            <main class="catalog-section">
+                <div class="catalog-header">
+                    <h2><i class="fas fa-swatchbook"></i> Katalog</h2>
+                    <div class="search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="catalogSearch" placeholder="Katalogda ara...">
+                    </div>
+                </div>
+                <div class="book-grid-wrapper">
+                    <div id="bookGrid" class="book-grid"></div>
+                    <button class="scroll-btn left hidden" id="scrollLeftBtn"><i class="fas fa-chevron-left"></i></button>
+                    <button class="scroll-btn right hidden" id="scrollRightBtn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Kitap Detayları ve Düzenleme için Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content" id="modalContent">
+            <!-- Modal içeriği buraya dinamik olarak eklenecek -->
+        </div>
+        <span class="close" id="modalClose"><i class="fas fa-times"></i></span>
+    </div>
+
+    <!-- Bildirimler -->
+    <div id="toast"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
