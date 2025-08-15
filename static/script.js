@@ -1,12 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- SABİTLER ve DEĞİŞKENLER ---
-    const API_BASE = 'http://127.0.0.1:8000';
+    const API_BASE = `${window.location.protocol}//${window.location.host}`;
     const API_KEY = 'super-secret-key';
     const BOOKS_PER_PAGE = 3;
+    const DEBOUNCE_DELAY = 300; // Arama gecikme süresi
 
     let allBooks = [];
     let filteredBooks = [];
     let currentIndex = 0;
+    let searchTimeout = null;
+    let isLoading = false;
+    let favoriteBooks = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let readingList = JSON.parse(localStorage.getItem('readingList') || '[]');
+    let viewMode = localStorage.getItem('viewMode') || 'grid'; // grid veya list
+    const REDUCED_MOTION = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    // Local override: 'on' | 'off' | 'auto' (default 'on' for your device)
+    const MOTION_PREF = (localStorage.getItem('motion') || 'on');
+    document.documentElement.setAttribute('data-motion', MOTION_PREF);
+    const EFFECTIVE_REDUCED = MOTION_PREF === 'off' ? true : (MOTION_PREF === 'on' ? false : REDUCED_MOTION);
 
     // --- ELEMENT REFERANSLARI ---
     const bookGrid = document.getElementById('bookGrid');
@@ -18,15 +29,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalClose = document.getElementById('modalClose');
     const scrollLeftBtn = document.getElementById('scrollLeftBtn');
     const scrollRightBtn = document.getElementById('scrollRightBtn');
+    const filterSelect = document.getElementById('catalogFilter');
 
     // --- OLAY DİNLEYİCİLER ---
     addBtn.addEventListener('click', handleAddBook);
     isbnInput.addEventListener('keypress', (e) => e.key === 'Enter' && handleAddBook());
     searchInput.addEventListener('input', handleSearch);
+    filterSelect?.addEventListener('change', handleSearch);
     modalClose.addEventListener('click', closeModal);
     window.addEventListener('click', (e) => e.target === modal && closeModal());
     scrollLeftBtn.addEventListener('click', () => changePage(-1));
     scrollRightBtn.addEventListener('click', () => changePage(1));
+    
+    // Export/Import event listeners
+    document.getElementById('exportJsonBtn')?.addEventListener('click', exportJSON);
+    document.getElementById('exportCsvBtn')?.addEventListener('click', exportCSV);
+    document.getElementById('importBtn')?.addEventListener('click', () => {
+        document.getElementById('importFile').click();
+    });
+    document.getElementById('importFile')?.addEventListener('change', handleImport);
+
+    // Global ripple effect for .btn
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn');
+        if (!btn) return;
+        if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
+        if (EFFECTIVE_REDUCED) return;
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        btn.style.setProperty('--ripple-x', `${x}px`);
+        btn.style.setProperty('--ripple-y', `${y}px`);
+        btn.classList.remove('ripple');
+        // force reflow to restart animation
+        void btn.offsetWidth;
+        btn.classList.add('ripple');
+        setTimeout(() => btn.classList.remove('ripple'), 700);
+    });
+
+    // 3D Tilt effect for book cards
+    function initTiltEffect() {
+        const bookCards = document.querySelectorAll('.book-card');
+        bookCards.forEach(card => {
+            // Remove existing listeners if any
+            card.removeEventListener('mousemove', handleTiltMove);
+            card.removeEventListener('mouseleave', handleTiltLeave);
+            
+            if (!EFFECTIVE_REDUCED) {
+                card.addEventListener('mousemove', handleTiltMove);
+                card.addEventListener('mouseleave', handleTiltLeave);
+            }
+        });
+    }
+
+    function handleTiltMove(e) {
+        const card = e.currentTarget;
+        const rect = card.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const mouseX = e.clientX - centerX;
+        const mouseY = e.clientY - centerY;
+        
+        // Calculate rotation values (max 15 degrees)
+        const rotateX = (mouseY / (rect.height / 2)) * -8;
+        const rotateY = (mouseX / (rect.width / 2)) * 8;
+        
+        // Calculate spotlight position
+        const spotlightX = ((e.clientX - rect.left) / rect.width) * 100;
+        const spotlightY = ((e.clientY - rect.top) / rect.height) * 100;
+        
+        card.style.setProperty('--rx', `${rotateX}deg`);
+        card.style.setProperty('--ry', `${rotateY}deg`);
+        card.style.setProperty('--mx', `${spotlightX}%`);
+        card.style.setProperty('--my', `${spotlightY}%`);
+    }
+
+    function handleTiltLeave(e) {
+        const card = e.currentTarget;
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+        card.style.setProperty('--mx', '50%');
+        card.style.setProperty('--my', '50%');
+    }
 
     // --- API FONKSİYONLARI ---
     async function apiFetch(endpoint, options = {}) {
@@ -44,15 +128,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return response.status !== 204 ? response.json() : null;
     }
 
+    // Backend health kontrolü (bağlantı hatası için hızlı uyarı)
+    async function checkBackend() {
+        try {
+            await fetch(`${API_BASE}/health`, { method: 'GET' });
+        } catch (e) {
+            showToast('Sunucuya bağlanılamıyor. Lütfen backend\'i çalıştırın (http://127.0.0.1:8000).', 'error');
+        }
+    }
+
     // --- ANA İŞLEVLER ---
     async function fetchAndDisplayStats() {
         try {
             const stats = await apiFetch('/stats');
             const statsCard = document.getElementById('statsCard');
             statsCard.innerHTML = `
-                <h2>İstatistikler</h2>
-                <p><strong>Toplam Kitap:</strong> <span id="statTotal">0</span></p>
-                <p><strong>Benzersiz Yazar:</strong> <span id="statAuthors">0</span></p>
+                <h2><i class="fas fa-chart-bar"></i> İstatistikler</h2>
+                <div class="stat-line"><i class="fas fa-book"></i><p><strong>Toplam Kitap:</strong> <span id="statTotal">0</span></p></div>
+                <div class="stat-line"><i class="fas fa-user-pen"></i><p><strong>Benzersiz Yazar:</strong> <span id="statAuthors">0</span></p></div>
             `;
             animateNumber(document.getElementById('statTotal'), stats.total_books, 700);
             animateNumber(document.getElementById('statAuthors'), stats.unique_authors, 700);
@@ -75,10 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     async function initialize() {
         try {
+            checkBackend();
             await fetchAndDisplayStats();
             allBooks = await apiFetch('/books');
             handleSearch(); // Başlangıçta tüm kitapları filtrele ve render et
-            initParticles();
         } catch (error) {
             showToast(`Kitaplar yüklenemedi: ${error.message}`, 'error');
         }
@@ -139,12 +232,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleSearch() {
-        const searchTerm = searchInput.value.toLowerCase();
-        filteredBooks = allBooks.filter(book =>
-            book.title.toLowerCase().includes(searchTerm) ||
-            book.author.toLowerCase().includes(searchTerm)
-        );
-        currentIndex = 0; // Aramadan sonra slider'ı başa sar
+        // Debounce ile arama performansını artır
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const currentFilter = (filterSelect?.value || 'all');
+            // Metin araması
+            filteredBooks = allBooks.filter(book =>
+                book.title.toLowerCase().includes(searchTerm) ||
+                book.author.toLowerCase().includes(searchTerm) ||
+                book.isbn.toLowerCase().includes(searchTerm)
+            );
+            // Ek filtre (favoriler/okuma listesi)
+            if (currentFilter === 'favorites') {
+                filteredBooks = filteredBooks.filter(b => favoriteBooks.includes(b.isbn));
+            } else if (currentFilter === 'reading') {
+                filteredBooks = filteredBooks.filter(b => readingList.includes(b.isbn));
+            }
+            currentIndex = 0; // Aramadan sonra slider'ı başa sar
+            renderBooks();
+        }, DEBOUNCE_DELAY);
+    }
+
+    // --- FAVORİ VE OKUMA LİSTESİ İŞLEVLERİ ---
+    function toggleFavorite(isbn) {
+        const index = favoriteBooks.indexOf(isbn);
+        if (index === -1) {
+            favoriteBooks.push(isbn);
+            showToast('Favorilere eklendi!', 'success');
+        } else {
+            favoriteBooks.splice(index, 1);
+            showToast('Favorilerden çıkarıldı!', 'info');
+        }
+        localStorage.setItem('favorites', JSON.stringify(favoriteBooks));
+        renderBooks();
+    }
+
+    function toggleReadingList(isbn) {
+        const index = readingList.indexOf(isbn);
+        if (index === -1) {
+            readingList.push(isbn);
+            showToast('Okuma listesine eklendi!', 'success');
+        } else {
+            readingList.splice(index, 1);
+            showToast('Okuma listesinden çıkarıldı!', 'info');
+        }
+        localStorage.setItem('readingList', JSON.stringify(readingList));
         renderBooks();
     }
 
@@ -158,19 +291,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         filteredBooks.forEach(book => {
+            const isFavorite = favoriteBooks.includes(book.isbn);
+            const isInReadingList = readingList.includes(book.isbn);
             const bookCard = document.createElement('div');
             bookCard.className = 'book-card';
             bookCard.innerHTML = `
                 <div class="book-cover">
-                    <img src="${API_BASE}/covers/${book.isbn}" alt="${book.title}" onerror="this.src='/static/default-cover.svg'">
+                    <img src="${API_BASE}/covers/${book.isbn}" alt="${book.title}" loading="lazy" onerror="this.src='/static/default-cover.svg'">
                     <div class="book-actions">
-                        <button class="action-icon edit-icon" data-isbn="${book.isbn}">✏️</button>
-                        <button class="action-icon delete-icon" data-isbn="${book.isbn}">🗑️</button>
+                        <button class="action-icon favorite-icon ${isFavorite ? 'active' : ''}" data-isbn="${book.isbn}" title="Favori">
+                            ${isFavorite ? '❤️' : '🤍'}
+                        </button>
+                        <button class="action-icon reading-icon ${isInReadingList ? 'active' : ''}" data-isbn="${book.isbn}" title="Okuma Listesi">
+                            ${isInReadingList ? '📖' : '📚'}
+                        </button>
+                        <button class="action-icon edit-icon" data-isbn="${book.isbn}" title="Düzenle">✏️</button>
+                        <button class="action-icon delete-icon" data-isbn="${book.isbn}" title="Sil">🗑️</button>
                     </div>
                 </div>
                 <div class="book-info">
                     <h3 class="book-title">${book.title}</h3>
                     <p class="book-author">${book.author}</p>
+                    <div class="book-badges">
+                        ${isFavorite ? '<span class="badge badge-favorite">❤️ Favori</span>' : ''}
+                        ${isInReadingList ? '<span class="badge badge-reading">📖 Okuma Listesi</span>' : ''}
+                    </div>
                 </div>
             `;
             bookGrid.appendChild(bookCard);
@@ -195,7 +340,55 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        document.querySelectorAll('.favorite-icon').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(btn.dataset.isbn);
+            });
+        });
+
+        document.querySelectorAll('.reading-icon').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleReadingList(btn.dataset.isbn);
+            });
+        });
+
+        // Initialize tilt effect for new cards
+        initTiltEffect();
+
         updateSlider();
+    }
+
+    function bindCardInteractions() {
+        const cards = document.querySelectorAll('.book-card');
+        cards.forEach(card => {
+            let raf = null;
+            const onMove = (e) => {
+                if (EFFECTIVE_REDUCED) return;
+                const rect = card.getBoundingClientRect();
+                const px = (e.clientX - rect.left) / rect.width;
+                const py = (e.clientY - rect.top) / rect.height;
+                const rx = (0.5 - py) * 12; // -6deg..6deg
+                const ry = (px - 0.5) * 12; // -6deg..6deg
+                if (raf) cancelAnimationFrame(raf);
+                raf = requestAnimationFrame(() => {
+                    card.style.setProperty('--mx', `${(px * 100).toFixed(2)}%`);
+                    card.style.setProperty('--my', `${(py * 100).toFixed(2)}%`);
+                    card.style.setProperty('--rx', `${rx.toFixed(2)}deg`);
+                    card.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
+                });
+            };
+            const onLeave = () => {
+                if (raf) cancelAnimationFrame(raf);
+                card.style.setProperty('--rx', `0deg`);
+                card.style.setProperty('--ry', `0deg`);
+                card.style.setProperty('--mx', `50%`);
+                card.style.setProperty('--my', `50%`);
+            };
+            card.addEventListener('mousemove', onMove);
+            card.addEventListener('mouseleave', onLeave);
+        });
     }
 
     // --- SLIDER İŞLEVLERİ ---
@@ -244,6 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             modal.style.display = 'flex';
+            // allow transition
+            requestAnimationFrame(() => modal.classList.add('open'));
         } catch (error) {
             showToast(`Detaylar yüklenemedi: ${error.message}`, 'error');
         }
@@ -270,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             modal.style.display = 'flex';
+            requestAnimationFrame(() => modal.classList.add('open'));
             document.getElementById('saveUpdateBtn').addEventListener('click', () => handleUpdateBook(isbn));
         } catch (error) {
             showToast(`Düzenleme için kitap yüklenemedi: ${error.message}`, 'error');
@@ -277,8 +473,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function closeModal() {
-        modal.style.display = 'none';
-        modalContent.innerHTML = '';
+        // graceful close with transition
+        modal.classList.remove('open');
+        const hide = () => {
+            modal.style.display = 'none';
+            modalContent.innerHTML = '';
+            modal.removeEventListener('transitionend', hide);
+        };
+        // If transitionend doesn't fire, fallback
+        modal.addEventListener('transitionend', hide);
+        setTimeout(hide, 320);
     }
 
     // --- YARDIMCI FONKSİYONLAR ---
@@ -289,58 +493,121 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { toast.classList.remove('show'); }, 3000);
     }
 
-    // --- PARÇACIK EFEKTİ ---
-    function initParticles() {
-        const canvas = document.getElementById('particles');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        let particlesArray = [];
-        const numberOfParticles = 50;
-        const particleColor = 'rgba(25, 118, 210, 0.4)'; // Mavi tema rengi
+    // Parçacıklar artık theme.js tarafından yönetiliyor.
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2.5 + 1;
-                this.speedX = Math.random() * 0.4 - 0.2;
-                this.speedY = Math.random() * 0.4 - 0.2;
+    // --- EXPORT/IMPORT FONKSİYONLARI ---
+    async function exportJSON() {
+        try {
+            const response = await fetch(`${API_BASE}/export/json`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            // Hata sayfalarının indirilmesini engelle
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(errText || 'JSON export başarısız.');
             }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
-                if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                const errText = await response.text();
+                throw new Error(errText || 'Beklenmeyen yanıt alındı.');
             }
-            draw() {
-                ctx.fillStyle = particleColor;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `library_export_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            showToast('Kütüphane başarıyla JSON olarak indirildi!', 'success');
+        } catch (error) {
+            showToast('Export hatası: ' + error.message, 'error');
         }
-        function createParticles() {
-            particlesArray = [];
-            for (let i = 0; i < numberOfParticles; i++) {
-                particlesArray.push(new Particle());
+    }
+
+    async function exportCSV() {
+        try {
+            const response = await fetch(`${API_BASE}/export/csv`, {
+                headers: { 'Accept': 'text/csv' }
+            });
+            // Hata sayfalarının indirilmesini engelle
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(errText || 'CSV export başarısız.');
             }
-        }
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-                particlesArray[i].draw();
+            const contentType = response.headers.get('content-type') || '';
+            // Sunucu bazen charset ekleyebilir: text/csv; charset=utf-8
+            if (!contentType.includes('text/csv')) {
+                const errText = await response.text();
+                throw new Error(errText || 'Beklenmeyen yanıt alındı.');
             }
-            requestAnimationFrame(animateParticles);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `library_export_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            showToast('Kütüphane başarıyla CSV olarak indirildi!', 'success');
+        } catch (error) {
+            showToast('Export hatası: ' + error.message, 'error');
         }
-        createParticles();
-        animateParticles();
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            createParticles();
-        });
+    }
+
+    async function handleImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        if (!file.name.endsWith('.json')) {
+            showToast('Lütfen bir JSON dosyası seçin!', 'warning');
+            return;
+        }
+        
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            const response = await fetch(`${API_BASE}/import/json`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': API_KEY
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error('Yetkilendirme hatası: API anahtarı geçersiz. .env içindeki API_KEY ile frontend\'deki API_KEY eşleşmeli.');
+                }
+                let errMsg = 'Import başarısız!';
+                try {
+                    const errJson = await response.json();
+                    errMsg = errJson.detail || errJson.message || errMsg;
+                } catch (_) {
+                    const errText = await response.text();
+                    if (errText) errMsg = errText;
+                }
+                throw new Error(errMsg);
+            }
+            
+            const result = await response.json();
+            showToast(`${result.imported} kitap başarıyla yüklendi!`, 'success');
+            
+            // Listeyi yenile
+            allBooks = await apiFetch('/books');
+            handleSearch();
+            fetchAndDisplayStats();
+            
+            // Input'ı temizle
+            event.target.value = '';
+        } catch (error) {
+            showToast('Import hatası: ' + error.message, 'error');
+            event.target.value = '';
+        }
     }
 
     // --- BAŞLANGIÇ ---
