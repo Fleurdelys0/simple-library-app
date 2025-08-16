@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kütüphane</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme');
+          var theme = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <!-- Arka Plan Efekti -->
+    <canvas id="particles"></canvas>
+
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-book-open"></i> Kütüphane</h1>
+            <div class="theme-switch" title="Temayı değiştir">
+                <input id="themeToggle" type="checkbox" role="switch" aria-label="Tema" aria-checked="false" />
+                <label for="themeToggle">
+                  <span class="icon moon" aria-hidden="true">🌙</span>
+                  <span class="thumb" aria-hidden="true"></span>
+                  <span class="icon sun" aria-hidden="true">☀️</span>
+                </label>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sol Taraf: İşlemler -->
+            <aside class="operations-section">
+                <div class="card">
+                    <h2><i class="fas fa-plus-circle"></i> Yeni Kitap Ekle</h2>
+                    <div class="form-group">
+                        <label for="isbn"><i class="fas fa-barcode"></i> ISBN ile Otomatik Ekle</label>
+                        <input type="text" id="isbn" placeholder="978-975-07-3589-3">
+                        <button id="addByIsbnBtn" class="btn"><i class="fas fa-plus"></i> Ekle</button>
+                    </div>
+                </div>
+                <div class="card" id="statsCard">
+                    <!-- İstatistikler buraya gelecek -->
+                </div>
+                <div class="card">
+                    <h2><i class="fas fa-file-export"></i> Dışa Aktar / İçe Aktar</h2>
+                    <div class="button-group">
+                        <button id="exportJsonBtn" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> JSON Olarak İndir
+                        </button>
+                        <button id="exportCsvBtn" class="btn btn-secondary">
+                            <i class="fas fa-file-csv"></i> CSV Olarak İndir
+                        </button>
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label for="importFile"><i class="fas fa-file-import"></i> JSON Dosyası Yükle</label>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                        <button id="importBtn" class="btn btn-secondary">
+                            <i class="fas fa-upload"></i> Dosya Seç ve Yükle
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Sağ Taraf: Katalog -->
+            <main class="catalog-section">
+                <div class="catalog-header">
+                    <h2><i class="fas fa-swatchbook"></i> Katalog</h2>
+                    <div class="catalog-controls">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="catalogSearch" placeholder="Katalogda ara...">
+                        </div>
+                        <div class="filter-wrapper">
+                            <select id="catalogFilter" aria-label="Filtre">
+                                <option value="all">Tümü</option>
+                                <option value="favorites">Favoriler</option>
+                                <option value="reading">Okuma Listesi</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="book-grid-wrapper">
+                    <div id="bookGrid" class="book-grid"></div>
+                    <button class="scroll-btn left hidden" id="scrollLeftBtn"><i class="fas fa-chevron-left"></i></button>
+                    <button class="scroll-btn right hidden" id="scrollRightBtn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Kitap Detayları ve Düzenleme için Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content" id="modalContent">
+            <!-- Modal içeriği buraya dinamik olarak eklenecek -->
+        </div>
+        <span class="close" id="modalClose"><i class="fas fa-times"></i></span>
+    </div>
+
+    <!-- Bildirimler -->
+    <div id="toast"></div>
+
+    <script src="/static/script.js"></script>
+    <script src="/static/theme.js"></script>
+</body>
+</html>

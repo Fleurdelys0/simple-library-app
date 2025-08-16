@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Yüzüklerin Efendisi",
+    "author": "J.R.R. Tolkien",
+    "isbn": "9789753423472",
+    "cover_url": "http://127.0.0.1:8000/covers/9789753423472"
+  },
+  {
+    "title": "Harry Potter and the Deathly Hallows (Harry Potter #7)",
+    "author": "J. K. Rowling",
+    "isbn": "9780747595823",
+    "cover_url": "http://127.0.0.1:8000/covers/9780747595823"
+  },
+  {
+    "title": "Dune Messiah",
+    "author": "Frank Herbert",
+    "isbn": "9780425035856",
+    "cover_url": "http://127.0.0.1:8000/covers/9780425035856"
+  },
+  {
+    "title": "Fluent Python",
+    "author": "Luciano Ramalho",
+    "isbn": "9781491946008",
+    "cover_url": "http://127.0.0.1:8000/covers/9781491946008"
+  }
+]

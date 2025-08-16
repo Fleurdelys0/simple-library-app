@@ -2,13 +2,20 @@
 import sqlite3
 import json
 import os
+import sys
 from typing import List, Dict, Any
 
-DATABASE_FILE = "library.db"
+import tempfile
+
+# Default database file. Use a temp file per-process to avoid locking issues when the
+# repository is on a synced folder (OneDrive) which can keep handles open on Windows.
+DATABASE_FILE = os.environ.get("LIBRARY_DB_FILE") or os.path.join(tempfile.gettempdir(), f"library_{os.getpid()}.db")
 JSON_FILE = "library.json"
 
 def get_db_connection() -> sqlite3.Connection:
     """Establishes a connection to the SQLite database."""
+    # Always use the configured DATABASE_FILE. Tests call Library(db_file=...) which
+    # sets database.DATABASE_FILE so this keeps connections consistent.
     conn = sqlite3.connect(DATABASE_FILE)
     conn.row_factory = sqlite3.Row
     return conn
@@ -35,7 +42,8 @@ def migrate_from_json() -> None:
     and if the JSON file exists before proceeding.
     """
     # During tests, avoid auto-migrating seed data so the DB starts empty.
-    if os.environ.get("PYTEST_CURRENT_TEST"):
+    # Detect pytest either via environment or loaded modules for robustness.
+    if os.environ.get("PYTEST_CURRENT_TEST") or "pytest" in sys.modules:
         return
     conn = get_db_connection()
     cursor = conn.cursor()

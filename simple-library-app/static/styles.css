@@ -1,0 +1,1078 @@
+/* --- DEĞİŞKENLER --- */
+:root {
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+
+  /* Dark Mavi Gradyan Tema (varsayılan) */
+  --bg-start: #071a33;
+  --bg-mid: #0d47a1;
+  --bg-end: #000a1e;
+
+  --gradient-primary-start: #1976d2;
+  --gradient-primary-end: #0d47a1;
+
+  /* Başlık gradyanı (dark'a uygun daha açık tonlar) */
+  --gradient-text-start: #bbdefb;
+  --gradient-text-end: #e3f2fd;
+
+  /* Glassmorphism (dark) */
+  --glass-bg: rgba(200, 200, 200, 0.25);
+  --glass-border: rgba(200, 200, 200, 0.35);
+  --glass-blur: 12px;
+
+  /* Metin renkleri (dark) */
+  --text-primary: #e3f2fd;
+  --text-secondary: #90caf9;
+  --text-muted: #64b5f6;
+
+  /* Form (tema bağımlı) */
+  --input-bg: rgba(255, 255, 255, 0.08);
+  --input-border: var(--glass-border);
+  --focus-ring: 0 0 0 3px rgba(25, 118, 210, 0.4);
+
+  /* Diğerleri */
+  --accent-success: #4caf50;
+  --accent-error: #f44336;
+  --accent-warning: #ff9800;
+
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.45);
+  --transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --theme-transition: 280ms ease;
+  /* Hover glow (dark default) */
+  --glow-color: rgba(25, 118, 210, 0.95);
+  --glow-outline: rgba(25, 118, 210, 1);
+  --glow-spot: rgba(25, 118, 210, 0.36);
+  /* Neon glow palette (dark default) - optimized for subtlety */
+  --neon-a: #00b4d8;   /* Softer cyan */
+  --neon-b: #0077b6;   /* Softer blue */
+  --neon-strength: 0.8; /* reduced opacity for more subtle effect */
+}
+
+/* Animate conic gradients reliably */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Light mode override'ları */
+[data-theme="light"] {
+  --bg-start: #cfe9ff;
+  --bg-mid: #64b5f6;
+  --bg-end: #1e3a8a;
+
+  --gradient-text-start: #0d47a1;
+  --gradient-text-end: #1976d2;
+
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.9);
+
+  --text-primary: #0d47a1;
+  --text-secondary: #1e88e5;
+  --text-muted: #64b5f6;
+
+  --input-bg: rgba(255, 255, 255, 0.7);
+  --input-border: var(--glass-border);
+  --focus-ring: 0 0 0 3px rgba(25, 118, 210, 0.3);
+
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+  /* Softer glow for light mode */
+  --glow-color: rgba(25, 118, 210, 0.75);
+  --glow-outline: rgba(25, 118, 210, 0.95);
+  --glow-spot: rgba(25, 118, 210, 0.28);
+  /* Neon palette for light theme (even softer) */
+  --neon-a: #0096c7;
+  --neon-b: #0077b6;
+  --neon-strength: 0.3;
+}
+
+/* --- GENEL STİLLER --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+  color: var(--text-primary);
+  font-weight: 600; /* a bit bolder for headings and content */
+  /* Tema bazlı gradyan arka plan */
+  background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-mid) 50%, var(--bg-end) 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+/* --- ARKA PLAN PARÇACIKLARI --- */
+#particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Dinamik arka plan aurora efekti */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(600px 400px at 20% 30%, var(--gradient-primary-start), transparent 60%),
+    radial-gradient(600px 400px at 80% 70%, var(--gradient-primary-end), transparent 60%);
+  filter: blur(60px) saturate(1.2);
+  opacity: 0.28;
+  animation: auroraMove 18s ease-in-out infinite alternate;
+}
+
+[data-theme="light"] body::before { opacity: 0.22; }
+
+@keyframes auroraMove {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-2%, 2%, 0) scale(1.05); }
+}
+
+/* --- BAŞLIKLAR --- */
+h1, h2, h3 {
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--gradient-text-start), var(--gradient-text-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header { display: flex; align-items: center; justify-content: space-between; }
+
+.header h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+/* --- TEMA SWITCH (SLIDER) --- */
+.theme-switch {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+.theme-switch input {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+  position: absolute;
+}
+.theme-switch label {
+  cursor: pointer;
+  width: 52px;
+  height: 28px;
+  background: var(--glass-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  border-radius: 100px;
+  position: relative;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition);
+  position: relative; /* ripple */
+  overflow: hidden;   /* ripple */
+}
+
+/* Ripple efekti */
+.btn::after {
+  content: "";
+  position: absolute;
+  left: var(--ripple-x, 50%);
+  top: var(--ripple-y, 50%);
+  width: 1px;
+  height: 1px;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.45), transparent 60%);
+  opacity: 0.8;
+  transition: transform 600ms ease, opacity 700ms ease;
+  pointer-events: none;
+}
+
+.btn.ripple::after {
+  transform: translate(-50%, -50%) scale(120);
+  opacity: 0;
+}
+
+.theme-switch label .icon {
+  font-size: 14px;
+  opacity: 0.95;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.2));
+  z-index: 0;
+  user-select: none;
+  pointer-events: none;
+  transition: opacity var(--transition), color var(--transition);
+}
+.theme-switch label .icon.moon { opacity: 0.95; }
+.theme-switch label .icon.sun { opacity: 0.45; }
+.theme-switch input:checked + label .icon.sun { opacity: 0.95; }
+.theme-switch input:checked + label .icon.moon { opacity: 0.45; }
+.theme-switch label .thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end));
+  border-radius: 90px;
+  transition: all var(--transition);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  z-index: 1;
+}
+.theme-switch input:checked + label {
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end));
+  border-color: transparent;
+}
+.theme-switch input:checked + label .thumb {
+  left: calc(100% - 3px);
+  transform: translateX(-100%);
+  background: #fff;
+}
+.theme-switch input:focus + label {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+}
+
+h3 {
+    font-size: 1.2rem;
+}
+
+/* --- KARTLAR ve GLASSMORPHISM --- */
+.card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+}
+
+/* --- ANA YAPI --- */
+.main-content {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 30px;
+}
+
+/* --- FORM ELEMANLARI --- */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--transition);
+}
+
+input[type="text"]::placeholder {
+  color: var(--text-muted);
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--gradient-primary-start);
+  box-shadow: var(--focus-ring);
+}
+
+/* --- DÜĞMELER --- */
+.btn {
+  display: inline-flex; /* Flexbox for alignment */
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* Space between icon and text */
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: white;
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end));
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition);
+  position: relative; /* ripple anchor */
+  overflow: hidden;   /* contain ripple */
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:disabled {
+opacity: 0.7;
+cursor: not-allowed;
+}
+
+.btn-secondary {
+background: linear-gradient(135deg, var(--text-secondary), var(--text-primary));
+font-size: 0.85rem;
+padding: 10px 20px;
+}
+
+.btn-secondary:hover {
+background: linear-gradient(135deg, var(--text-primary), var(--gradient-primary-start));
+}
+
+/* Dark mode: use darker blue for secondary buttons (Export/Import) */
+[data-theme="dark"] .btn-secondary {
+background: linear-gradient(135deg, #0b3a7a, #0d47a1);
+border: 1px solid rgba(255,255,255,0.12);
+}
+[data-theme="dark"] .btn-secondary:hover {
+background: linear-gradient(135deg, #0d47a1, #1565c0);
+}
+
+.button-group {
+display: flex;
+gap: 10px;
+margin-bottom: 10px;
+}
+
+.button-group .btn {
+    flex: 1;
+}
+
+/* --- KATALOG BÖLÜMÜ --- */
+.catalog-section {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    padding: 0 0 48px 0; /* add space at the bottom of the catalog section */
+}
+
+.catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.catalog-header h2 {
+    margin-bottom: 0;
+}
+
+.catalog-header .search-wrapper {
+    position: relative;
+    max-width: 300px;
+    width: 100%;
+}
+
+.catalog-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-wrapper select {
+  width: 160px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: all var(--transition);
+}
+
+.filter-wrapper select:focus { 
+  outline: none; 
+  box-shadow: var(--focus-ring); 
+  border-color: var(--gradient-primary-start); 
+}
+
+.catalog-header .search-wrapper .fa-search {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.catalog-header input {
+    max-width: 300px;
+    padding-left: 40px; /* Make space for the icon */
+}
+
+/* Spacing between ISBN input and Ekle button */
+#isbn + .btn { 
+  margin-top: 10px; 
+}
+
+/* --- SLIDER --- */
+.book-grid-wrapper {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.book-grid {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.5s ease-in-out;
+}
+
+/* entrance animation for cards with easing + stagger */
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(18px) scale(0.995); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.book-grid .book-card {
+  animation: cardEntrance 520ms cubic-bezier(.2,.8,.2,1) both;
+}
+.book-grid .book-card:nth-child(1) { animation-delay: 40ms; }
+.book-grid .book-card:nth-child(2) { animation-delay: 120ms; }
+.book-grid .book-card:nth-child(3) { animation-delay: 200ms; }
+.book-grid .book-card:nth-child(4) { animation-delay: 280ms; }
+.book-grid .book-card:nth-child(5) { animation-delay: 340ms; }
+
+.book-card {
+  flex: 0 0 calc(33.333% - 14px);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: visible; /* keep neon behind content and inside card */
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px color-mix(in srgb, var(--neon-b), transparent 70%),
+    0 0 8px color-mix(in srgb, var(--neon-a), transparent calc(100% - (var(--neon-strength) * 60%))),
+    0 0 16px color-mix(in srgb, var(--neon-b), transparent calc(100% - (var(--neon-strength) * 40%)));
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative; /* spotlight/tilt */
+  will-change: transform, box-shadow;
+  isolation: isolate; /* contain blending of pseudo-elements */
+}
+
+
+/* Spotlight efekti (mouse konumuna göre parlayan bölge) */
+.book-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(400px 300px at var(--mx, 50%) var(--my, 50%), var(--glow-spot), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  pointer-events: none;
+  z-index: 0; /* behind content */
+}
+
+/* Masked neon border ring that never covers the center */
+.book-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 6px; /* ring thickness */
+  background: conic-gradient(
+    from 0deg,
+    var(--neon-a) 0%,
+    #8ecae6 50%, /* A brighter, lighter blue */
+    var(--neon-a) 100%
+  );
+  /* keep only the ring (exclude center) */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0.65; /* Make it more transparent */
+  z-index: 0; /* behind content */
+}
+
+.book-card:hover::after,
+.book-card:focus-within::after { opacity: 1; }
+
+
+.book-card:hover,
+.book-card:focus-within {
+  transform: translateY(-6px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  /* Refined neon glow - more subtle and elegant */
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.4), /* base shadow */
+    0 0 0 2px color-mix(in srgb, var(--neon-b), transparent 60%),
+    0 0 15px color-mix(in srgb, var(--neon-a), transparent calc(100% - (var(--neon-strength) * 70%))),
+    0 0 30px color-mix(in srgb, var(--neon-b), transparent calc(100% - (var(--neon-strength) * 50%))),
+    0 0 50px color-mix(in srgb, var(--neon-a), transparent calc(100% - (var(--neon-strength) * 30%)));
+}
+
+/* Spotlight aktivasyon hover sırasında */
+.book-card:hover::before {
+  opacity: 0.15;
+}
+
+@keyframes spinAngle { to { --angle: 360deg; } }
+
+/* Soft pulsing glow for book covers */
+@keyframes coverGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%      { opacity: 0.9; transform: scale(1.025); }
+}
+
+/* Pronounced pulse for image box-shadow */
+@keyframes coverPulse {
+  0% {
+    box-shadow:
+      0 10px 28px color-mix(in srgb, var(--neon-b), transparent 30%),
+      0 0 30px color-mix(in srgb, var(--neon-a), transparent 40%);
+  }
+  50% {
+    box-shadow:
+      0 16px 48px color-mix(in srgb, var(--neon-b), transparent 12%),
+      0 0 72px color-mix(in srgb, var(--neon-a), transparent 12%);
+  }
+  100% {
+    box-shadow:
+      0 10px 28px color-mix(in srgb, var(--neon-b), transparent 30%),
+      0 0 30px color-mix(in srgb, var(--neon-a), transparent 40%);
+  }
+}
+
+.book-cover {
+  height: 300px;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate; /* contain the glow */
+  /* Round only the top corners to match the card */
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.book-cover::after {
+  /* Disabled cover halo */
+  content: none;
+}
+
+.book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s cubic-bezier(0.25, 0.8, 0.25, 1), filter 0.35s ease, box-shadow 0.35s ease;
+  position: relative;
+  z-index: 1;
+  /* Follow the top rounding so image clips cleanly */
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  /* Cover glow removed */
+}
+
+.book-card:hover .book-cover::after { transform: none; opacity: 1; animation: none; }
+
+.book-card:hover .book-cover img {
+  transform: scale(1.08);
+  /* Cover glow removed */
+}
+
+.book-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  position: relative; /* for neon ring */
+  z-index: 2; /* ensure above cover so ring isn't obscured */
+  border-radius: var(--radius-md);
+  /* Pronounced neon glow shadow around info box */
+  box-shadow:
+    0 6px 18px color-mix(in srgb, var(--neon-b), transparent 40%),
+    0 0 22px color-mix(in srgb, var(--neon-a), transparent 36%),
+    0 0 44px color-mix(in srgb, var(--neon-b), transparent 48%);
+  transition: box-shadow var(--theme-transition);
+}
+
+/* Stronger glow on hover/focus for info box */
+.book-card:hover .book-info,
+.book-card:focus-within .book-info {
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--neon-b), transparent 24%),
+    0 0 54px color-mix(in srgb, var(--neon-a), transparent 20%),
+    0 0 90px color-mix(in srgb, var(--neon-b), transparent 30%);
+}
+
+/* Dedicated neon ring around the info box */
+.book-info::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 3px; /* ring thickness */
+  background: conic-gradient(
+    from var(--angle, 0deg),
+    var(--neon-a) 0%,
+    var(--neon-b) 35%,
+    var(--neon-a) 70%,
+    var(--neon-b) 100%
+  );
+  /* keep only the ring (exclude center) */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  z-index: -1; /* behind info content but still above the cover due to parent z-index */
+  filter:
+    drop-shadow(0 0 8px color-mix(in srgb, var(--neon-a), transparent calc(100% - (var(--neon-strength) * 70%))))
+    drop-shadow(0 0 15px color-mix(in srgb, var(--neon-b), transparent calc(100% - (var(--neon-strength) * 50%))));
+  opacity: 0.95;
+}
+
+/* Subtle animated sheen on hover/focus */
+.book-card:hover .book-info::after,
+.book-card:focus-within .book-info::after {
+  animation: spinAngle 6s linear infinite;
+}
+
+.book-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  color: var(--text-primary);
+  -webkit-text-fill-color: initial; /* Gradyanı iptal et */
+}
+
+.book-author {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.book-isbn {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: auto; /* En alta yasla */
+}
+
+.book-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+  background-color: rgba(0,0,0,0.75);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  backdrop-filter: blur(8px);
+  /* Ensure menu renders above the cover image inside its stacking context */
+  z-index: 3;
+}
+
+.book-card:hover .book-actions {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.action-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    padding: 4px;
+    border-radius: 6px;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.action-icon:hover { 
+  transform: scale(1.15); 
+  background: rgba(255,255,255,0.1);
+}
+.delete-icon:hover { 
+  color: var(--accent-error); 
+  background: rgba(244, 67, 54, 0.1);
+}
+.edit-icon:hover { 
+  color: var(--text-secondary); 
+  background: rgba(144, 202, 249, 0.1);
+}
+.favorite-icon:hover {
+  color: #e91e63;
+  background: rgba(233, 30, 99, 0.1);
+}
+.reading-icon:hover {
+  color: var(--text-secondary);
+  background: rgba(144, 202, 249, 0.1);
+}
+.favorite-icon.active { 
+  animation: heartbeat 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  color: #e91e63;
+}
+.reading-icon.active { 
+  animation: pulse 0.6s cubic-bezier(0.25, 0.8, 0.25, 1); 
+  color: var(--text-secondary);
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+/* --- BADGES --- */
+.book-badges {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+}
+
+.badge-favorite {
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(233, 30, 99, 0.1));
+    border-color: rgba(244, 67, 54, 0.3);
+    color: #e91e63;
+}
+
+.badge-reading {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(25, 118, 210, 0.1));
+    border-color: rgba(33, 150, 243, 0.3);
+    color: #1976d2;
+}
+
+.no-books {
+  width: 100%;
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  background: var(--glass-bg);
+  border-radius: var(--radius-lg);
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: transform 240ms ease, box-shadow 240ms ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+
+.scroll-btn:hover { background: var(--gradient-primary-start); color: white; }
+.scroll-btn.left { left: 8px; }
+.scroll-btn.right { right: 8px; }
+.scroll-btn.hidden { display: none; }
+
+/* --- BİLDİRİMLER (TOAST) --- */
+.toast { position: fixed; bottom: 20px; right: 20px; padding: 16px 24px; border-radius: var(--radius-md); color: white; z-index: 1000; opacity: 0; transform: translateY(20px); transition: all var(--transition); box-shadow: var(--shadow-lg); font-weight: 600; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast-success { background: linear-gradient(135deg, var(--accent-success), #388e3c); }
+.toast-error { background: linear-gradient(135deg, var(--accent-error), #d32f2f); }
+.toast-info { background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end)); }
+.toast-warning { background: linear-gradient(135deg, var(--accent-warning), #f57c00); }
+
+/* --- MODAL --- */
+.modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; background: rgba(13, 71, 161, 0.3); backdrop-filter: blur(8px); opacity: 0; transition: opacity var(--theme-transition); }
+.modal.open { opacity: 1; }
+.modal-content { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 0; max-width: 800px; width: 90%; max-height: 80vh; overflow: hidden; box-shadow: var(--shadow-lg); position: relative; display: grid; grid-template-columns: 300px 1fr; transform: translateY(12px) scale(0.98); opacity: 0; transition: transform 280ms cubic-bezier(.2,.8,.2,1), opacity 240ms ease; }
+.modal.open .modal-content { transform: translateY(0) scale(1); opacity: 1; }
+.close { position: absolute; top: 15px; right: 15px; background: rgba(0, 0, 0, 0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; transition: all var(--transition); }
+.close:hover { background: rgba(0, 0, 0, 0.4); transform: scale(1.1); }
+.detail-cover { background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end)); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.detail-cover {
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  border-radius: var(--radius-md);
+}
+.detail-cover::after {
+  content: "";
+  position: absolute;
+  inset: -28px;
+  border-radius: inherit;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--neon-a), transparent 30%), transparent 60%);
+  filter: blur(28px) saturate(1.2);
+  opacity: 0.95;
+  pointer-events: none;
+  z-index: 0;
+}
+.detail-cover img { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1; transition: transform 0.45s ease, box-shadow 0.35s ease; box-shadow: 0 12px 30px color-mix(in srgb, var(--neon-b), transparent 30%), 0 0 32px color-mix(in srgb, var(--neon-a), transparent 30%); }
+.detail-info { padding: 30px; overflow-y: auto; }
+.detail-info h2 { margin: 0 0 20px 0; font-size: 2rem; line-height: 1.2; }
+.detail-info p { margin: 0 0 15px 0; font-size: 1rem; line-height: 1.6; color: var(--text-primary); }
+.detail-info strong { font-weight: 700; color: var(--gradient-text-start); }
+
+/* Stats lines with icons */
+.stat-line { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin: 10px 0; 
+}
+.stat-line i { 
+  color: var(--text-secondary); 
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.2)); 
+}
+
+
+
+/* --- SKELETON YÜKLEYİCİLER --- */
+.skeleton {
+  animation: pulse 1.5s infinite ease-in-out;
+  background: linear-gradient(-90deg, #e0e0e0 0%, #f0f0f0 50%, #e0e0e0 100%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes pulse {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.skeleton-card {
+  flex: 0 0 calc(33.333% - 14px);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  height: 380px; /* Match book-card height */
+}
+
+.skeleton-cover {
+  height: 300px;
+  background-color: #ccc;
+}
+
+.skeleton-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.skeleton-text {
+  height: 20px;
+  margin-bottom: 8px;
+  background-color: #ddd;
+}
+
+.skeleton-text.short {
+  width: 70%;
+}
+
+.skeleton-stats-line {
+    height: 20px;
+    margin-bottom: 10px;
+    background-color: #ddd;
+    border-radius: var(--radius-sm);
+}
+
+.skeleton-stats-line:last-child {
+    margin-bottom: 0;
+}
+
+/* --- RESPONSİVE TASARIM --- */
+/* Tablet ve küçük ekranlar için */
+@media (max-width: 1024px) {
+  .container {
+    padding: 30px 20px;
+  }
+  
+  .main-content {
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+  }
+  
+  .book-card {
+    flex: 0 0 calc(50% - 10px); /* 2 column layout on tablets */
+  }
+  
+  .header h1 {
+    font-size: 2.4rem;
+  }
+}
+
+/* Mobile phones */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 16px;
+  }
+  
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  .theme-switch {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  
+  .catalog-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .catalog-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .catalog-header .search-wrapper {
+    max-width: none;
+  }
+  
+  .filter-wrapper select {
+    width: 100%;
+  }
+  
+  .book-grid {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .book-card {
+    flex: none;
+    width: 100%;
+  }
+  
+  .scroll-btn {
+    display: none; /* Hide scroll buttons on mobile */
+  }
+  
+  .modal-content {
+    grid-template-columns: 1fr;
+    max-width: 95%;
+    max-height: 90vh;
+  }
+  
+  .detail-cover {
+    height: 250px;
+  }
+  
+  .detail-info {
+    padding: 20px;
+  }
+}
+
+/* Small mobile phones */
+@media (max-width: 480px) {
+  .container {
+    padding: 16px 12px;
+  }
+  
+  .header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .card {
+    padding: 20px;
+  }
+  
+  .book-cover {
+    height: 250px;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+}
+
+/* --- Tema geçişleri ve reduce-motion --- */
+body, .card, input[type="text"], select, .btn, h1, h2, h3 {
+  transition:
+    background var(--theme-transition),
+    background-color var(--theme-transition),
+    color var(--theme-transition),
+    border-color var(--theme-transition),
+    box-shadow var(--theme-transition);
+}
+
+/* Reduced-motion override removed: animations always enabled */

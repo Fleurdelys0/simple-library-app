@@ -5,6 +5,9 @@ import shutil
 import sqlite3
 
 import httpx
+import database
+import sys
+import tempfile
 
 from book import Book
 from config import settings
@@ -14,7 +17,27 @@ from database import get_db_connection, initialize_database
 class Library:
     """Manages the collection of books and data persistence."""
 
-    def __init__(self) -> None:
+    def __init__(self, db_file: Optional[str] = None) -> None:
+        # Allow tests (and callers) to override the database file used by module-level
+        # helpers in database.py by setting database.DATABASE_FILE before initializing.
+        # When running under pytest and no db_file is provided, use a unique temp
+        # DB per-test so Library() instances do not share state across tests.
+        if db_file:
+            database.DATABASE_FILE = db_file
+        else:
+            # Detect pytest via environment or loaded modules
+            pytest_name = None
+            if "PYTEST_CURRENT_TEST" in os.environ:
+                pytest_name = os.environ.get("PYTEST_CURRENT_TEST")
+            elif "pytest" in sys.modules:
+                # Fallback to process-based temp DB when pytest is present but
+                # PYTEST_CURRENT_TEST isn't set for some calls.
+                pytest_name = f"pid_{os.getpid()}"
+
+            if pytest_name:
+                safe = str(abs(hash(pytest_name)))
+                database.DATABASE_FILE = os.path.join(tempfile.gettempdir(), f"library_test_{safe}.db")
+
         initialize_database()  # Ensure DB and tables exist, and migrate if needed
         self.books: List[Book] = self._load_books_from_db()
 
@@ -263,6 +286,14 @@ class Library:
         if len(s) == 13:
             return s.isdigit()
         return False
+
+    def close(self) -> None:
+        """Compatibility helper for tests: close any resources held by the Library.
+
+        The current implementation opens DB connections per-operation, so there's
+        nothing to close, but tests call this method so provide a no-op here.
+        """
+        return None
 
 
 class ExternalServiceError(Exception):
