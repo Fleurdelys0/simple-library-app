@@ -9,6 +9,7 @@ from rich.panel import Panel
 
 from library import Library, ExternalServiceError
 from config import settings
+import typer
 
 # Typer removed — using a simple menu-based CLI
 APP_NAME = "Kütüphane CLI"
@@ -22,6 +23,79 @@ except Exception as e:
     console.print(f"[bold red]Kütüphane başlatılırken hata: {e}[/]")
     # Kütüphane başlatılamasa bile serve komutu çalışabilsin
     library = None
+
+# --- Typer CLI App ---
+app = typer.Typer(help="Library CLI")
+
+@app.command("list")
+def cli_list():
+    """List all books (plain output for tests)."""
+    lib = Library()
+    books = lib.list_books()
+    if not books:
+        print("No books in library.")
+        return
+    for b in books:
+        print(f"{b.isbn} - {b.title} by {b.author}")
+
+@app.command("add")
+def cli_add(isbn: str):
+    """Add a book by ISBN via Open Library."""
+    lib = Library()
+    try:
+        book = lib.add_book_by_isbn(isbn)
+        print(f"Successfully added: {book.title} by {book.author}")
+    except LookupError as e:
+        print(f"Could not find book: {e}")
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+@app.command("remove")
+def cli_remove(isbn: str):
+    """Remove a book by ISBN."""
+    lib = Library()
+    if lib.remove_book(isbn):
+        print(f"Book with ISBN {isbn} has been removed.")
+    else:
+        print(f"Book with ISBN {isbn} not found.")
+
+@app.command("find")
+def cli_find(isbn: str):
+    """Find a book by ISBN and show details."""
+    lib = Library()
+    book = lib.find_book(isbn)
+    if book:
+        print("Book Found")
+        print(f"Title: {book.title}")
+        print(f"Author: {book.author}")
+        print(f"ISBN: {book.isbn}")
+    else:
+        print(f"Book with ISBN {isbn} not found.")
+
+@app.command("serve")
+def cli_serve():
+    """Start the web UI using uvicorn (plain output for tests)."""
+    host = settings.api_host
+    port = int(settings.api_port)
+    url = f"http://{host}:{port}/"
+    print(f"Starting web UI on {url}")
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
+    try:
+        subprocess.run([
+            sys.executable,
+            "-m", "uvicorn",
+            "api:app",
+            "--host", host,
+            "--port", str(port),
+            "--reload"
+        ])
+    except Exception:
+        pass
 
 # CLI: list all books
 def list_all_books():
@@ -185,5 +259,8 @@ def run_menu():
         print()  # blank line between operations
 
 if __name__ == "__main__":
-    run_menu()
+    if len(sys.argv) > 1:
+        app()
+    else:
+        run_menu()
 

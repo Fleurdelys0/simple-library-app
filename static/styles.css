@@ -495,7 +495,6 @@ margin-bottom: 10px;
   isolation: isolate; /* contain blending of pseudo-elements */
 }
 
-/* Ensure actual card content renders above pseudo-elements */
 
 /* Spotlight efekti (mouse konumuna göre parlayan bölge) */
 .book-card::before {

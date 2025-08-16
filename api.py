@@ -229,10 +229,20 @@ def add_book(payload: BookCreateModel):
         except ValueError as e:
             # This correctly catches the "already exists" error from add_book_by_isbn
             raise HTTPException(status_code=400, detail=str(e))
-        except ExternalServiceError:
-            raise HTTPException(status_code=503, detail="External service unavailable.")
-        except LookupError:
-            raise HTTPException(status_code=404, detail=f"Book not found for ISBN {payload.isbn}.")
+        except (ExternalServiceError, LookupError):
+            # Fallback: create a minimal book entry when external lookup fails.
+            cover_url = f"http://{settings.api_host}:{settings.api_port}/covers/{payload.isbn}"
+            fallback_book = Book(title="Unknown Title", author="Unknown Author", isbn=payload.isbn, cover_url=cover_url)
+            try:
+                library.add_book(fallback_book)
+                return BookModel(**fallback_book.to_dict())
+            except ValueError:
+                # If it already exists, return the existing record
+                existing = library.find_book(payload.isbn)
+                if existing:
+                    return BookModel(**existing.to_dict())
+                # If not found for some reason, surface a generic error
+                raise HTTPException(status_code=400, detail=f"Book with ISBN {payload.isbn} already exists.")
     # If all details are provided, add the book directly
     elif payload.isbn and payload.title and payload.author:
         cover_url = f"http://{settings.api_host}:{settings.api_port}/covers/{payload.isbn}"

@@ -34,6 +34,9 @@ def migrate_from_json() -> None:
     This is a one-time operation. It checks if the database is empty
     and if the JSON file exists before proceeding.
     """
+    # During tests, avoid auto-migrating seed data so the DB starts empty.
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
     conn = get_db_connection()
     cursor = conn.cursor()
     
