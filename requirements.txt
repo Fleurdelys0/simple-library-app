@@ -1,7 +1,24 @@
-httpx>=0.27.0
-fastapi>=0.111.0
-python-dotenv>=1.0.1
-uvicorn[standard]>=0.30.0
-pytest>=8.2.0
-rich>=14.0.0
-typer[all]>=0.12.3
+# Temel bağımlılıklar
+httpx[http2]==0.27.0
+fastapi==0.111.0
+python-dotenv==1.0.1
+uvicorn[standard]==0.30.0
+typer[all]==0.12.3
+rich==13.7.1
+
+# Veritabanı (SQLAlchemy için ORM desteği)
+sqlalchemy==2.0.23
+
+# Kimlik Doğrulama & Güvenlik  
+passlib[bcrypt]==1.7.4
+python-multipart>=0.0.7
+
+# Performans
+redis>=5.0.0
+Pillow>=10.0.0  # Resim optimizasyonu için
+hiredis>=2.3.0  # Redis performans artışı
+
+# Testler
+pytest==8.2.0
+requests>=2.31.0
+

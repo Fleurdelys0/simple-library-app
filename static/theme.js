@@ -1,4 +1,4 @@
-/* Theme management and theme-aware particles */
+/* Tema yönetimi ve tema duyarlı parçacıklar */
 (function () {
   const THEME_KEY = 'theme';
   const PARTICLE_COLORS = {
@@ -39,7 +39,7 @@
     try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
   }
 
-  // tsParticles or particles.js if available, else canvas fallback
+  // Mevcutsa tsParticles veya particles.js, aksi halde canvas yedeği
   function initParticles(theme) {
     const colors = PARTICLE_COLORS[theme] || PARTICLE_COLORS.dark;
     const count = 80;
@@ -78,7 +78,7 @@
       return;
     }
 
-    // Canvas fallback (simple particles)
+    // Canvas yedeği (basit parçacıklar)
     const canvas = document.getElementById('particles');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -135,7 +135,7 @@
 
     fallback.onResize = () => {
       resize();
-      // Recreate particles to fill new space evenly
+      // Yeni alanı eşit şekilde doldurmak için parçacıkları yeniden oluştur
       fallback.particles = [];
       for (let i = 0; i < count; i++) fallback.particles.push(new Particle());
     };
@@ -143,21 +143,21 @@
   }
 
   function reinitParticles(theme) {
-    // tsParticles cleanup
+    // tsParticles temizliği
     if (window.tsParticles) {
       try {
         const dom = typeof window.tsParticles.domItem === 'function' ? window.tsParticles.domItem(0) : (window.tsParticles.dom && window.tsParticles.dom()[0]);
         if (dom && typeof dom.destroy === 'function') dom.destroy();
       } catch (e) {}
     }
-    // particles.js cleanup
+    // particles.js temizliği
     if (window.pJSDom && window.pJSDom.length) {
       try {
         window.pJSDom[0].pJS.fn.vendors.destroypJS();
         window.pJSDom = [];
       } catch (e) {}
     }
-    // fallback cleanup
+    // yedek (fallback) temizliği
     if (fallback.rafId) {
       cancelAnimationFrame(fallback.rafId);
       fallback.rafId = null;
@@ -173,7 +173,7 @@
   }
 
   function init() {
-    // initial theme from localStorage or existing html attribute
+    // Başlangıç teması: localStorage'dan veya mevcut HTML özniteliğinden al
     const saved = getSavedTheme();
     const initial = (saved === 'light' || saved === 'dark') ? saved : (document.documentElement.getAttribute('data-theme') || 'dark');
     setTheme(initial, false);
@@ -186,7 +186,7 @@
       });
     }
 
-    // init particles once DOM is ready
+    // DOM hazır olunca parçacıkları başlat
     initParticles(initial);
   }
 

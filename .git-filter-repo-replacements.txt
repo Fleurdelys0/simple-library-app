@@ -1,0 +1,4 @@
+# Replace any Hugging Face access tokens in history
+regex:hf_[A-Za-z0-9]{20,}==><REDACTED_HF_TOKEN>
+# Replace assignments like HUGGING_FACE_API_KEY=hf_...
+regex:(HUGGING_FACE_API_KEY\s*=\s*)hf_[A-Za-z0-9]{20,}==>\1<REDACTED_HF_TOKEN>

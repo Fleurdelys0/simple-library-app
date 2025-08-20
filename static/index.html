@@ -16,15 +16,26 @@
     </script>
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <!-- Tippy.js tooltips CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/material.css">
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!-- NProgress CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <!-- Arka Plan Efekti -->
     <canvas id="particles"></canvas>
 
+    <!-- Canvas tabanlı özel arka plan kapsayıcısı -->
+    <div class="content--canvas" aria-hidden="true"></div>
+
     <div class="container">
-        <header class="header">
+        <header class="header" data-aos="fade-down" data-aos-duration="800">
             <h1><i class="fas fa-book-open"></i> Kütüphane</h1>
-            <div class="theme-switch" title="Temayı değiştir">
+            <div class="theme-switch" data-tippy-content="Temayı değiştir">
                 <input id="themeToggle" type="checkbox" role="switch" aria-label="Tema" aria-checked="false" />
                 <label for="themeToggle">
                   <span class="icon moon" aria-hidden="true">🌙</span>
@@ -36,53 +47,82 @@
 
         <div class="main-content">
             <!-- Sol Taraf: İşlemler -->
-            <aside class="operations-section">
-                <div class="card">
-                    <h2><i class="fas fa-plus-circle"></i> Yeni Kitap Ekle</h2>
-                    <div class="form-group">
-                        <label for="isbn"><i class="fas fa-barcode"></i> ISBN ile Otomatik Ekle</label>
-                        <input type="text" id="isbn" placeholder="978-975-07-3589-3">
-                        <button id="addByIsbnBtn" class="btn"><i class="fas fa-plus"></i> Ekle</button>
+            <aside class="operations-section" data-aos="fade-right" data-aos-duration="600" data-aos-delay="200">
+                <div class="operations-grid">
+                    <div class="card" data-aos="zoom-in" data-aos-duration="500" data-aos-delay="300">
+                        <h2><i class="fas fa-plus-circle"></i> Yeni Kitap Ekle</h2>
+                        <div class="form-group">
+                            <label for="isbn"><i class="fas fa-barcode"></i> ISBN ile Otomatik Ekle </label>
+                            <input type="text" id="isbn" placeholder="978-975-07-3589-3">
+                            <button id="addByIsbnBtn" class="btn"><i class="fas fa-plus"></i> Ekle</button>
+                        </div>
+                        <div class="api-status" id="apiStatus">
+                            <small><i class="fas fa-info-circle"></i> Google Books + AI destekli ekleme</small>
+                        </div>
                     </div>
-                </div>
-                <div class="card" id="statsCard">
-                    <!-- İstatistikler buraya gelecek -->
-                </div>
-                <div class="card">
-                    <h2><i class="fas fa-file-export"></i> Dışa Aktar / İçe Aktar</h2>
-                    <div class="button-group">
-                        <button id="exportJsonBtn" class="btn btn-secondary">
-                            <i class="fas fa-download"></i> JSON Olarak İndir
-                        </button>
-                        <button id="exportCsvBtn" class="btn btn-secondary">
-                            <i class="fas fa-file-csv"></i> CSV Olarak İndir
-                        </button>
+                    <div class="card" data-aos="zoom-in" data-aos-duration="500" data-aos-delay="400">
+                        <h2><i class="fas fa-tags"></i> Etiketler</h2>
+                        <div id="tagList" class="tag-list">
+                            <!-- Etiketler buraya gelecek -->
+                        </div>
+                        <div class="tag-input-group">
+                            <input type="text" id="newTagName" placeholder="Yeni etiket adı">
+                            <input type="color" id="newTagColor" value="#3B82F6">
+                            <button id="addTagBtn" class="btn btn-sm"><i class="fas fa-plus"></i></button>
+                        </div>
                     </div>
-                    <div class="form-group" style="margin-top: 16px;">
-                        <label for="importFile"><i class="fas fa-file-import"></i> JSON Dosyası Yükle</label>
-                        <input type="file" id="importFile" accept=".json" style="display: none;">
-                        <button id="importBtn" class="btn btn-secondary">
-                            <i class="fas fa-upload"></i> Dosya Seç ve Yükle
-                        </button>
+                    
+                    
+                    <div class="card" data-aos="zoom-in" data-aos-duration="500" data-aos-delay="700">
+                        <h2><i class="fas fa-file-export"></i> Dışa / İçe Aktar</h2>
+                        <div class="button-group">
+                            <button id="exportJsonBtn" class="btn btn-secondary">
+                                <i class="fas fa-download"></i> JSON
+                            </button>
+                            <button id="exportCsvBtn" class="btn btn-secondary">
+                                <i class="fas fa-file-csv"></i> CSV
+                            </button>
+                        </div>
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label for="importFile"><i class="fas fa-file-import"></i> JSON Dosyası Yükle</label>
+                            <input type="file" id="importFile" accept=".json" style="display: none;">
+                            <button id="importBtn" class="btn btn-secondary">
+                                <i class="fas fa-upload"></i> Dosya Seç ve Yükle
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Güncel Kitap İncelemeleri (NYT RSS üzerinden) -->
+                    <div class="card" data-aos="zoom-in" data-aos-duration="500" data-aos-delay="800">
+                        <h2><i class="fas fa-newspaper"></i> Güncel Kitap İncelemeleri</h2>
+                        <div class="button-group" style="margin-bottom: 10px;">
+                            <button id="refreshNytReviews" class="btn btn-secondary">
+                                <i class="fas fa-rotate"></i> Yenile
+                            </button>
+                        </div>
+                        <div id="nytReviewsState" class="muted" style="margin-bottom:8px;">Yükleniyor...</div>
+                        <ul id="nytReviewsList" class="list-unstyled"></ul>
+                    </div>
+
                 </div>
             </aside>
 
             <!-- Sağ Taraf: Katalog -->
-            <main class="catalog-section">
-                <div class="catalog-header">
+            <main class="catalog-section" data-aos="fade-left" data-aos-duration="600" data-aos-delay="200">
+                <div class="catalog-header" data-aos="fade-up" data-aos-duration="500" data-aos-delay="400">
                     <h2><i class="fas fa-swatchbook"></i> Katalog</h2>
                     <div class="catalog-controls">
                         <div class="search-wrapper">
                             <i class="fas fa-search"></i>
                             <input type="text" id="catalogSearch" placeholder="Katalogda ara...">
                         </div>
-                        <div class="filter-wrapper">
-                            <select id="catalogFilter" aria-label="Filtre">
-                                <option value="all">Tümü</option>
-                                <option value="favorites">Favoriler</option>
-                                <option value="reading">Okuma Listesi</option>
-                            </select>
+                        <div class="button-group">
+                            <button id="advancedFilterBtn" class="btn btn-secondary" data-tippy-content="Gelişmiş Filtre">
+                                <i class="fas fa-filter"></i> Filtrele
+                            </button>
+                            <button id="randomBookBtn" class="btn btn-primary" data-tippy-content="Rastgele Kitap">
+                                <i class="fas fa-random"></i> Rastgele
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -90,6 +130,29 @@
                     <div id="bookGrid" class="book-grid"></div>
                     <button class="scroll-btn left hidden" id="scrollLeftBtn"><i class="fas fa-chevron-left"></i></button>
                     <button class="scroll-btn right hidden" id="scrollRightBtn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <!-- İstatistikler ve Dışa Aktar - Katalog Altında -->
+                <div class="catalog-bottom-section">
+                    <div class="card" data-aos="fade-up" data-aos-duration="500" data-aos-delay="600">
+                        <h2><i class="fas fa-chart-bar"></i> İstatistikler</h2>
+                        <div id="quickFilterBadge" class="quick-filter hidden" aria-live="polite"></div>
+                        <div class="stats-grid" id="statsGrid">
+                            <!-- İstatistikler buraya gelecek -->
+                        </div>
+                        <div class="stats-charts" style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <canvas id="chartAuthors" height="160" aria-label="En çok kitaplı yazarlar" role="img"></canvas>
+                            </div>
+                            <div>
+                                <canvas id="chartCategories" height="160" aria-label="Kategori dağılımı" role="img"></canvas>
+                            </div>
+                        </div>
+                        <div id="extendedStats" class="extended-stats" style="margin-top: 12px;">
+                            <div class="top-author" id="topAuthor"></div>
+                            <div class="recent-additions" id="recentAdditions"></div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
@@ -99,14 +162,117 @@
     <div id="bookModal" class="modal">
         <div class="modal-content" id="modalContent">
             <!-- Modal içeriği buraya dinamik olarak eklenecek -->
+            <div class="modal-loading" id="modalLoading">
+                <div class="modal-spinner">
+                    <div class="spinner"></div>
+                    <div class="loading-text">İçerik yükleniyor...</div>
+                </div>
+            </div>
         </div>
         <span class="close" id="modalClose"><i class="fas fa-times"></i></span>
+    </div>
+
+    <!-- Gelişmiş Filtre Modal -->
+    <div id="filterModal" class="modal">
+        <div class="modal-content filter-modal">
+            <h2><i class="fas fa-filter"></i> Gelişmiş Filtre</h2>
+            <div class="filter-form">
+                <div class="form-group">
+                    <label>Başlık</label>
+                    <input type="text" id="filterTitle" placeholder="Kitap başlığı">
+                </div>
+                <div class="form-group">
+                    <label>Yazar</label>
+                    <input type="text" id="filterAuthor" placeholder="Yazar adı">
+                </div>
+                <div class="form-group">
+                    <label>Yayın Yılı</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="filterYearFrom" placeholder="Başlangıç" min="1900" max="2024">
+                        <input type="number" id="filterYearTo" placeholder="Bitiş" min="1900" max="2024">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Etiketler</label>
+                    <div id="filterTags" class="filter-tags">
+                        <!-- Etiketler buraya gelecek -->
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="applyFilterBtn" class="btn btn-primary">Uygula</button>
+                    <button id="clearFilterBtn" class="btn btn-secondary">Temizle</button>
+                    <button id="closeFilterBtn" class="btn btn-secondary">Kapat</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Bildirimler -->
     <div id="toast"></div>
 
-    <script src="/static/script.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        window.loadTippy = function() {
+            if (typeof tippy !== 'undefined' && tippy) {
+                return Promise.resolve();
+            }
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.min.js';
+                script.onload = () => {
+                    console.log('Tippy.js yüklendi');
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('Tippy.js yüklenemedi, tooltipsiz devam ediliyor');
+                    resolve(); // Hata durumunda da devam et
+                };
+                document.head.appendChild(script);
+            });
+        };
+        window.loadTippy();
+    </script>
+    <!-- Toastify -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- NProgress -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Fuse.js -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <!-- mark.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mark.js@8.11.1/dist/mark.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- GSAP for neon hover animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/static/script.js?v=1"></script>
     <script src="/static/theme.js"></script>
-</body>
+    
+    <!-- Liquid Glass SVG Filter (hidden) -->
+    <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+      <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+        <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="5" result="turbulence">
+          <animate attributeName="baseFrequency" dur="18s" values="0.006 0.006;0.012 0.008;0.008 0.012;0.006 0.006" repeatCount="indefinite" />
+        </feTurbulence>
+        <feComponentTransfer in="turbulence" result="mapped">
+          <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+          <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+          <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+        </feComponentTransfer>
+        <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+        <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1" specularExponent="100" lighting-color="white" result="specLight">
+          <fePointLight x="-200" y="-200" z="300" />
+        </feSpecularLighting>
+        <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
+        <feDisplacementMap in="SourceGraphic" in2="softMap" scale="120" xChannelSelector="R" yChannelSelector="G">
+          <animate attributeName="scale" dur="14s" values="80;120;100;140;110;80" repeatCount="indefinite" />
+        </feDisplacementMap>
+      </filter>
+    </svg>
+    <!-- SimplexNoise ve özel arka plan -->
+    <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.min.js"></script>
+    <script src="/static/background.js"></script>
+  </body>
 </html>

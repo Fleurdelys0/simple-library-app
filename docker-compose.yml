@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # FastAPI Kütüphane Uygulaması
+  library-app:
+    build: .
+    container_name: library_app
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8010
+      - LIBRARY_DB_FILE=/app/data/library.db
+      - API_KEY=super-secret-key
+      - OPENLIBRARY_TIMEOUT=10.0
+      # Redis connection for caching
+      - REDIS_URL=redis://redis:6379/0
+      # Performance optimizations
+      - ENABLE_GOOGLE_BOOKS=true
+      - ENABLE_AI_FEATURES=true
+    volumes:
+      # Veritabanı dosyasını kalıcı hale getir
+      - ./data:/app/data
+      # Statik dosyalar (hot reload için)
+      - ./static:/app/static:ro
+      # library.json varsa onu da bağla
+      - ./library.json:/app/library.json:ro
+    ports:
+      - "8010:8010"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: library_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# Kalıcı veri için volume tanımla
+volumes:
+  library_data:
+  redis_data:

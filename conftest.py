@@ -7,9 +7,9 @@ from database import DATABASE_FILE
 
 @pytest.fixture
 def lib(tmp_path, request):
-    # Create a unique DB file per-test
+    # Her test için benzersiz bir veritabanı dosyası oluştur
     db_file = str(tmp_path / f"test_{request.node.name}.db")
-    # Ensure the Library uses this DB file
+    # Kütüphanenin bu veritabanı dosyasını kullandığından emin ol
     lib = Library(db_file=db_file)
     yield lib
     try:
