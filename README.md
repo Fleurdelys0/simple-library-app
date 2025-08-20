@@ -98,16 +98,17 @@ Projeyi çalıştırmanın en kolay yolu Docker kullanmaktır.
     ```
 3.  **Redis Sunucusunu Başlatın:**
     Lokal makinenizde bir Redis sunucusunun çalıştığından emin olun.
-4.  **API Sunucusunu Başlatın:**
+4.  **API Sunucusunu Başlatın (Manuel/Varsayılan 8000):**
     ```bash
-    uvicorn api:app --host 0.0.0.0 --port 8010 --reload
+    uvicorn api:app --host 0.0.0.0 --port 8000 --reload
     ```
 
 ## ⚙️ Kullanım
 
 ### 🌐 Web Arayüzü
 
-Uygulama çalıştırıldıktan sonra [http://localhost:8010](http://localhost:8010) adresini ziyaret ederek modern web arayüzünü kullanabilirsiniz.
+- Docker ile: [http://localhost:8010](http://localhost:8010)
+- Manuel (Uvicorn, varsayılan): [http://localhost:8000](http://localhost:8000)
 
 ### 🖥️ Komut Satırı Arayüzü (CLI)
 
@@ -122,7 +123,10 @@ docker-compose exec library-app python main.py
 
 ### 📖 API Endpoint'leri
 
-API, [http://localhost:8010/docs](http://localhost:8010/docs) adresindeki Swagger UI üzerinden etkileşimli olarak test edilebilir. Başlıca endpoint'ler:
+API, Swagger UI üzerinden test edilebilir:
+- Docker ile: [http://localhost:8010/docs](http://localhost:8010/docs)
+- Manuel (Uvicorn): [http://localhost:8000/docs](http://localhost:8000/docs)
+Başlıca endpoint'ler:
 
 | Metod  | Endpoint                       | Açıklama                                                    |
 | :----- | :----------------------------- | :---------------------------------------------------------- |
@@ -138,6 +142,45 @@ API, [http://localhost:8010/docs](http://localhost:8010/docs) adresindeki Swagge
 | `GET`  | `/stats/extended`              | Detaylı kütüphane istatistiklerini döndürür.                |
 
 *Not: `POST`, `PUT`, `DELETE` gibi veri değiştiren işlemler için `X-API-Key` başlığında bir API anahtarı gönderilmesi gerekmektedir.*
+
+## 🔐 Hugging Face Anahtarı ve Güvenli Proxy Kullanımı
+
+Bu projede Hugging Face API anahtarı, istemciye asla verilmez. Çağrılar, uygulama içinde tanımlı güvenli bir proxy üzerinden (sunucu tarafı) yapılır.
+
+- __Temel ilke__: Anahtar sadece sunucuda/CI’da ortam değişkeni olarak tutulur; repo veya istemci kodunda yer almaz.
+- __Proxy uç noktası__: `POST /proxy/hf/models/{model_path}` (sunucu tarafı, `X-API-Key` ile korunur)
+- __Ayar__: `.env` veya barındırma ortamınızda aşağıdaki değişkenleri tanımlayın:
+  - `HUGGING_FACE_API_KEY` (zorunlu)
+  - `HUGGING_FACE_BASE_URL` = `http://<API_HOST>:<API_PORT>/proxy/hf`
+
+### Hızlı Başlangıç
+
+- __Docker ile__ (önerilen):
+  1) Hugging Face anahtarınızı ortam değişkeni olarak verin: `HUGGING_FACE_API_KEY=hf_xxx`
+  2) `docker-compose up --build`
+  3) Test: `curl -X POST http://localhost:8010/proxy/hf/models/facebook/bart-large-cnn \
+     -H 'Content-Type: application/json' -H 'X-API-Key: super-secret-key' \
+     -d '{"inputs":"This is a long text that needs summarization."}'`
+
+- __Manuel (Uvicorn)__:
+  1) `.env` örneği:
+     ```env
+     API_HOST=0.0.0.0
+     API_PORT=8000
+     API_KEY=super-secret-key
+     ENABLE_AI_FEATURES=true
+     HUGGING_FACE_API_KEY=hf_xxx
+     HUGGING_FACE_BASE_URL=http://127.0.0.1:8000/proxy/hf
+     ```
+  2) Uygulamayı başlatın: `uvicorn api:app --host 0.0.0.0 --port 8000 --reload`
+  3) Aynı test `curl` komutuyla doğrulayın.
+
+### Alternatif Senaryolar
+
+- __Kendi anahtarını host etmek istemeyen kullanıcılar__: `HUGGING_FACE_BASE_URL` değerini varsayılan resmi endpoint’te bırakıp (`https://api-inference.huggingface.co`), kendi `HUGGING_FACE_API_KEY` anahtarlarını `.env`’lerine yazarak kullanabilir.
+- __Serverless proxy__ (Vercel/Cloudflare/AWS Lambda) tercih edebilirsiniz; anahtar yine sadece sunucu/fonksiyon ortam değişkeninde tutulur.
+
+> Güvenlik notu: `.env` dosyası `.gitignore` içindedir; anahtarınızı asla repoya commit etmeyin.
 
 ## ✅ Testler
 
