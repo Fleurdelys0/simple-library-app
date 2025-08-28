@@ -2,7 +2,7 @@ import httpx
 import asyncio
 import time
 from typing import Optional, Dict, Any, List
-from config import settings
+from config.config import settings
 import logging
 from datetime import datetime, timedelta
 from collections import defaultdict, deque

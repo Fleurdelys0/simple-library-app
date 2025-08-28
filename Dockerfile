@@ -14,7 +14,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Uygulama kodunu kopyala
-COPY . .
+COPY src/ ./src/
+COPY config/ ./config/
+COPY utils/ ./utils/
+COPY scripts/ ./scripts/
+COPY static/ ./static/
+COPY tests/ ./tests/
+COPY conftest.py .
 
 # Statik dosyalar ve veritabanı için dizinler oluştur
 RUN mkdir -p /app/static /app/data
@@ -34,4 +40,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 8010
 
 # Uygulamayı başlat
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8010"]
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8010"]

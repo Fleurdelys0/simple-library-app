@@ -2,8 +2,8 @@ import os
 import tempfile
 import pytest
 
-from library import Library
-from database import DATABASE_FILE
+from src.library import Library
+from src.database import DATABASE_FILE
 
 @pytest.fixture
 def lib(tmp_path, request):

@@ -9,9 +9,9 @@ from enum import Enum
 
 import httpx
 
-from config import settings
-from http_client import get_http_client
-from database import get_db_connection
+from config.config import settings
+from src.services.http_client import get_http_client
+from src.database import get_db_connection
 
 
 # Configure logging

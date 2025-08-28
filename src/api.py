@@ -17,14 +17,14 @@ from pydantic import BaseModel, Field
 from functools import lru_cache
 import hashlib
 from threading import RLock
-from http_client import get_http_client, cleanup_http_client
+from src.services.http_client import get_http_client, cleanup_http_client
 import xml.etree.ElementTree as ET
 from contextlib import asynccontextmanager
 
-from library import Library, ExternalServiceError
-from book import Book
-from config import settings
-from database import get_db_connection
+from src.library import Library, ExternalServiceError
+from src.book import Book
+from config.config import settings
+from src.database import get_db_connection
 
 
 library = Library()
@@ -142,7 +142,7 @@ async def health():
     }
 
 # Daha iyi performans için önbellek yöneticisini içe aktar
-from cache_manager import cache_manager
+from src.services.cache_manager import cache_manager
 
 # Geriye dönük uyumluluk için eski önbellek işlevleri
 def get_cached_response(key: str) -> Any | None:
@@ -668,14 +668,21 @@ def get_books_paginated(
 
 # --- Harici Haber Akışları (Anahtarsız) ---
 @app.get("/news/books/nyt")
-async def get_nyt_books_news(limit: int = Query(5, ge=1, le=20)):
+async def get_nyt_books_news(
+    limit: int = Query(5, ge=1, le=20),
+    force_refresh: bool = Query(False, description="Bypass cache and force a refresh from the source")
+):
     """NYT Books RSS akışını JSON'a proxy'le ve ayrıştır.
 
     En son kitapla ilgili makaleleri döndürür: başlık, bağlantı, yayınlanma tarihi, özet, resim (varsa).
     Harici istekleri azaltmak için bellek içi TTL önbelleği kullanır.
     """
     RSS_URL = "https://rss.nytimes.com/services/xml/rss/nyt/Books.xml"
-    cache_key = f"news:nyt:books:{limit}"
+    cache_key = f"v2:news:nyt:books:{limit}"
+    
+    if force_refresh:
+        cache_manager.delete(cache_key)
+
     cached = get_cached_response(cache_key)
     if cached is not None:
         return JSONResponse(
@@ -732,6 +739,25 @@ async def get_nyt_books_news(limit: int = Query(5, ge=1, le=20)):
                     "summary": _t(desc_el),
                     "image": image_url
                 })
+
+        from email.utils import parsedate_to_datetime
+        from datetime import datetime, timezone
+
+        # Tarihe göre sırala (en yeni en başta)
+        def get_date(item):
+            date_str = item.get('published_at')
+            if not date_str:
+                return datetime.min.replace(tzinfo=timezone.utc)
+            try:
+                dt = parsedate_to_datetime(date_str)
+                # Make sure datetime is timezone-aware for consistent comparison
+                if dt.tzinfo is None:
+                    return dt.replace(tzinfo=timezone.utc)
+                return dt
+            except (TypeError, ValueError):
+                return datetime.min.replace(tzinfo=timezone.utc)
+
+        items.sort(key=get_date, reverse=True)
 
         # Kırp ve önbelleğe al
         result = items[:limit]
@@ -795,6 +821,8 @@ async def add_book(payload: BookCreateModel):
             # Bu ISBN ile ilgili önbellekleri geçersiz kıl
             invalidate_cache(f"enhanced:{payload.isbn}")
             invalidate_cache(f"ai_summary:{payload.isbn}")
+            # Kitap listesi önbelleklerini de geçersiz kıl
+            invalidate_cache("books:")
             return EnhancedBookModel(**book.to_dict())
         except ValueError as e:
             # Bu, "zaten var" hatasını doğru bir şekilde yakalar
@@ -808,6 +836,8 @@ async def add_book(payload: BookCreateModel):
                 # Bu ISBN ile ilgili önbellekleri geçersiz kıl
                 invalidate_cache(f"enhanced:{payload.isbn}")
                 invalidate_cache(f"ai_summary:{payload.isbn}")
+                # Kitap listesi önbelleklerini de geçersiz kıl
+                invalidate_cache("books:")
                 return EnhancedBookModel(**fallback_book.to_dict())
             except ValueError:
                 # Zaten varsa, mevcut kaydı döndür
@@ -827,6 +857,8 @@ async def add_book(payload: BookCreateModel):
             # Bu ISBN ile ilgili önbellekleri geçersiz kıl
             invalidate_cache(f"enhanced:{payload.isbn}")
             invalidate_cache(f"ai_summary:{payload.isbn}")
+            # Kitap listesi önbelleklerini de geçersiz kıl
+            invalidate_cache("books:")
             return EnhancedBookModel(**book.to_dict())
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
@@ -873,6 +905,8 @@ def delete_book(isbn: str):
     # Bu ISBN ile ilgili önbellekleri geçersiz kıl
     invalidate_cache(f"enhanced:{isbn}")
     invalidate_cache(f"ai_summary:{isbn}")
+    # Kitap listesi önbelleklerini de geçersiz kıl
+    invalidate_cache("books:")
     return {"message": "Kitap kaldırıldı."}
 
 class UpdateBookModel(BaseModel):
@@ -890,6 +924,8 @@ def update_book(isbn: str, update: UpdateBookModel):
     # Bu ISBN ile ilgili önbellekleri geçersiz kıl
     invalidate_cache(f"enhanced:{isbn}")
     invalidate_cache(f"ai_summary:{isbn}")
+    # Kitap listesi önbelleklerini de geçersiz kıl (sıralama/filtre sonuçları etkilenebilir)
+    invalidate_cache("books:")
     return BookModel(**book.to_dict())
 
 class BookEnrichedModel(BookModel):

@@ -22,7 +22,7 @@ os.environ['ENABLE_AI_FEATURES'] = 'true'
 os.environ['HUGGING_FACE_API_KEY'] = os.getenv('HUGGING_FACE_API_KEY', '')
 
 # Import after setting environment variables
-from api import app
+from src.api import app
 
 client = TestClient(app)
 API_KEY = "super-secret-key"

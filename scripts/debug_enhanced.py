@@ -6,8 +6,8 @@ sys.path.append(".")
 
 from typing import cast
 
-from library import Library
-from book import Book
+from src.library import Library
+from src.book import Book
 from fastapi import Request
 from fastapi.responses import Response
 from starlette.requests import Request as StarletteRequest
@@ -56,7 +56,7 @@ def debug_enhanced_issue():
             print(f"   ✅ to_dict çalışıyor: {len(book_dict)} alan")
             
             # EnhancedBookModel oluşturmayı test et
-            from api import EnhancedBookModel, _normalize_enhanced_payload
+            from src.api import EnhancedBookModel, _normalize_enhanced_payload
             try:
                 # Uç nokta ile aynı normalleştirmeyi kullan
                 normalized_dict = _normalize_enhanced_payload(book_dict)
@@ -78,7 +78,7 @@ def debug_enhanced_issue():
     # Test 4: Tam gelişmiş uç nokta mantığını test et
     print(f"\n4. Gelişmiş uç nokta mantığı test ediliyor...")
     try:
-        from api import get_enhanced_book
+        from src.api import get_enhanced_book
         
         # Gerçek Starlette/FastAPI Request ve Response örnekleri oluştur
         scope: Scope = {

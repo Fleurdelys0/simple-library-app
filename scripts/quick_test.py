@@ -1,7 +1,7 @@
 import asyncio
 import os
 from dotenv import load_dotenv
-from hugging_face_service import HuggingFaceService
+from src.services.hugging_face_service import HuggingFaceService
 
 load_dotenv()
 

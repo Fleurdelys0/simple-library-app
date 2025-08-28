@@ -2,7 +2,7 @@ import os
 import importlib
 import pytest
 from fastapi.testclient import TestClient
-from config import settings
+from config.config import settings
 
 
 @pytest.fixture
@@ -11,7 +11,7 @@ def client(tmp_path, request):
     db_file = str(tmp_path / f"api_test_{request.node.name}.db")
     os.environ["LIBRARY_DB_FILE"] = db_file
 
-    import api as api_module
+    import src.api as api_module
     # Reload api so its global Library() instance uses the test-specific DB
     importlib.reload(api_module)
 

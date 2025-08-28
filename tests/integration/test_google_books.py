@@ -7,7 +7,7 @@ Bu script Google Books servisini test etmek için kullanılır.
 import asyncio
 import os
 from dotenv import load_dotenv
-from google_books_service import GoogleBooksService
+from src.services.google_books_service import GoogleBooksService
 import pytest
 
 # Mark the entire module as integration to allow skipping by default

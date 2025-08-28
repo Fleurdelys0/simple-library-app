@@ -9,17 +9,17 @@ import weakref
 from functools import lru_cache
 
 import httpx
-import database
+import src.database as database
 import sys
 import tempfile
 
-from book import Book
-from http_client import get_http_client
-from config import settings
-from database import get_db_connection, initialize_database, return_connection_to_pool
-from hugging_face_service import HuggingFaceService
-from google_books_service import GoogleBooksService
-from cache_manager import cached, cache_manager
+from src.book import Book
+from src.services.http_client import get_http_client
+from config.config import settings
+from src.database import get_db_connection, initialize_database, return_connection_to_pool
+from src.services.hugging_face_service import HuggingFaceService
+from src.services.google_books_service import GoogleBooksService
+from src.services.cache_manager import cached, cache_manager
 
 
 class Library:

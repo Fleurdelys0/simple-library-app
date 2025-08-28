@@ -2,9 +2,9 @@ import pytest
 import os
 import sqlite3
 
-from library import Library
-from book import Book
-from database import DATABASE_FILE, get_db_connection, initialize_database
+from src.library import Library
+from src.book import Book
+from src.database import DATABASE_FILE, get_db_connection, initialize_database
 
 # Fixture to ensure a clean database for each test
 @pytest.fixture(autouse=True)
@@ -105,7 +105,7 @@ def test_add_book_by_isbn_success(monkeypatch):
             return FakeResponse(200, {"name": "Scott Meyers"})
         return FakeResponse(404, {})
 
-    monkeypatch.setattr("library.httpx.get", fake_get)
+    monkeypatch.setattr("src.library.httpx.get", fake_get)
     book = lib.add_book_by_isbn("9780321765723")
     assert book.title == "Effective C++"
     assert "Scott Meyers" in book.author
@@ -125,6 +125,6 @@ def test_add_book_by_isbn_not_found(monkeypatch):
     def fake_get(url, timeout=10):
         return FakeResponse(404, {})
 
-    monkeypatch.setattr("library.httpx.get", fake_get)
+    monkeypatch.setattr("src.library.httpx.get", fake_get)
     with pytest.raises(LookupError):
         lib.add_book_by_isbn("0000000000")

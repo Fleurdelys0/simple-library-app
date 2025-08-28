@@ -1,5 +1,5 @@
 import asyncio
-from library import Library
+from src.library import Library
 
 async def main():
     """Mevcut tüm kitapları yineler ve onları Google Books'tan gelen verilerle zenginleştirir."""

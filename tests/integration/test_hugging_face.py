@@ -7,7 +7,7 @@ Bu script HuggingFace servisini test etmek için kullanılır.
 import asyncio
 import os
 from dotenv import load_dotenv
-from hugging_face_service import HuggingFaceService, SentimentLabel
+from src.services.hugging_face_service import HuggingFaceService, SentimentLabel
 import pytest
 
 # Mark the entire module as integration to allow skipping by default

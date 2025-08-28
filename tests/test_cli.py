@@ -2,8 +2,8 @@ import pytest
 from typer.testing import CliRunner
 from unittest.mock import patch, MagicMock
 
-from main import app
-from library import Library, Book
+from src.main import app
+from src.library import Library, Book
 
 runner = CliRunner()
 
@@ -82,6 +82,6 @@ def test_serve_command(mock_webbrowser_open, mock_subprocess_run, lib):
     # Check if uvicorn is called with correct arguments
     args = mock_subprocess_run.call_args[0][0]
     assert "uvicorn" in args
-    assert "api:app" in args
+    assert "src.api:app" in args
     assert "--host" in args
     assert "--port" in args

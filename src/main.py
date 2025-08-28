@@ -15,12 +15,12 @@ from rich.prompt import Confirm, Prompt
 from rich.markup import escape
 from rich import box
 
-from library import Library, ExternalServiceError
-import database
-from config import settings
-from cli_config import cli_config as config_manager
+from src.library import Library, ExternalServiceError
+import src.database as database
+from config.config import settings
+from utils.cli_config import cli_config as config_manager
 import typer
-from ui_helpers import set_output_mode, print_list_result, print_stats_result
+from utils.ui_helpers import set_output_mode, print_list_result, print_stats_result
 
 # Typer kaldırıldı — basit menü tabanlı bir CLI kullanılıyor
 APP_NAME = "Kütüphane CLI"
@@ -475,7 +475,7 @@ def cli_serve(timeout: int = typer.Option(0, "--timeout", help="Otomatik çıkı
         args = [
             sys.executable,
             "-m", "uvicorn",
-            "api:app",
+            "src.api:app",
             "--host", host,
             "--port", str(port),
         ]
@@ -618,7 +618,7 @@ def serve(host: Optional[str] = None, port: Optional[int] = None, timeout: Optio
         args = [
             sys.executable,
             "-m", "uvicorn",
-            "api:app",
+            "src.api:app",
             "--host", host,
             "--port", str(port),
         ]

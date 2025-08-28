@@ -18,7 +18,7 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-from config import settings
+from config.config import settings
 
 logger = logging.getLogger(__name__)
 

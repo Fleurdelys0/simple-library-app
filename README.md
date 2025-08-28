@@ -44,6 +44,64 @@ Proje, modern yazılım geliştirme pratiklerini sergilemek amacıyla kapsamlı 
     - Web sunucusunu başlatma, toplu kitap ekleme ve yapılandırma yönetimi için komutlar.
 - **Kolay Kurulum:** `docker-compose` ile tek komutla tüm sistemi (uygulama + Redis) ayağa kaldırma.
 
+## 📂 Proje Yapısı
+
+Proje, modern geliştirme standartlarına uygun olarak şu şekilde organize edilmiştir:
+
+```
+library-app/
+├── src/                    # Ana uygulama kodu
+│   ├── __init__.py
+│   ├── api.py             # FastAPI ana uygulaması
+│   ├── library.py         # Kütüphane yönetim mantığı
+│   ├── main.py            # CLI arayüzü
+│   ├── book.py            # Kitap veri modeli
+│   ├── database.py        # Veritabanı katmanı
+│   └── services/          # Harici servis entegrasyonları
+│       ├── __init__.py
+│       ├── google_books_service.py
+│       ├── hugging_face_service.py
+│       ├── cache_manager.py
+│       └── http_client.py
+├── config/                # Yapılandırma dosyaları
+│   ├── __init__.py
+│   ├── config.py         # Ana yapılandırma
+│   ├── .env.example      # Ortam değişkenleri şablonu
+│   ├── pytest.ini       # Test yapılandırması
+│   └── pyrightconfig.json # Tip kontrolü yapılandırması
+├── utils/                 # Yardımcı araçlar
+│   ├── __init__.py
+│   ├── validators.py     # Giriş doğrulama
+│   ├── ui_helpers.py     # CLI UI yardımcıları
+│   └── cli_config.py     # CLI yapılandırması
+├── scripts/               # Betikler ve araçlar
+│   ├── __init__.py
+│   ├── debug_enhanced.py
+│   ├── enrich_existing_books.py
+│   └── quick_test.py
+├── static/                # Web arayüzü dosyaları
+│   ├── index.html
+│   ├── script.js
+│   ├── styles.css
+│   ├── theme.js
+│   └── background.js
+├── tests/                 # Test dosyaları
+│   ├── test_*.py
+│   └── integration/
+├── docs/                  # Belgeler
+├── Dockerfile             # Container tanımı
+├── docker-compose.yml     # Servis orkestrasyonu
+├── requirements.txt       # Python bağımlılıkları
+├── conftest.py           # Pytest yapılandırması
+└── README.md             # Bu dosya
+```
+
+Bu yapı şu avantajları sağlar:
+- **Modülerlik**: Kod mantıklı parçalara ayrılmış
+- **Bakım kolaylığı**: İlgili dosyalar birlikte gruplanmış
+- **Ölçeklenebilirlik**: Yeni özellikler kolayca eklenebilir
+- **Endüstri standardları**: Yaygın kullanılan proje organizasyonu
+
 ## 🛠️ Teknoloji Yığını
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-green?style=flat-square&logo=fastapi)
@@ -78,9 +136,9 @@ Projeyi çalıştırmanın en kolay yolu Docker kullanmaktır.
     ```
 
 2.  **Environment Dosyasını Hazırlayın:**
-    `.env.example` dosyasını kopyalayarak `.env` adında yeni bir dosya oluşturun ve gerekirse içindeki API anahtarlarını güncelleyin.
+    `config/.env.example` dosyasını kopyalayarak `.env` adında yeni bir dosya oluşturun ve gerekirse içindeki API anahtarlarını güncelleyin.
     ```bash
-    cp .env.example .env
+    cp config/.env.example .env
     ```
 
 3.  **Uygulamayı Başlatın:**
@@ -100,7 +158,7 @@ Projeyi çalıştırmanın en kolay yolu Docker kullanmaktır.
     Lokal makinenizde bir Redis sunucusunun çalıştığından emin olun.
 4.  **API Sunucusunu Başlatın (Manuel/Varsayılan 8000):**
     ```bash
-    uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+    uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload
     ```
 
 ## ⚙️ Kullanım
@@ -114,11 +172,11 @@ Projeyi çalıştırmanın en kolay yolu Docker kullanmaktır.
 
 Etkileşimli menüyü başlatmak için:
 ```bash
-python main.py
+python -m src.main
 ```
 Veya `docker-compose` kullanıyorsanız:
 ```bash
-docker-compose exec library-app python main.py
+docker-compose exec library-app python -m src.main
 ```
 
 ### 📖 API Endpoint'leri

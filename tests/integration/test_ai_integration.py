@@ -8,8 +8,8 @@ import asyncio
 import os
 import tempfile
 from dotenv import load_dotenv
-from library import Library
-from book import Book
+from src.library import Library
+from src.book import Book
 import pytest
 
 # Mark the entire module as integration to allow skipping by default

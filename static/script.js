@@ -874,7 +874,10 @@ document.addEventListener('DOMContentLoaded', () => {
               nytRefreshBtn.disabled = true;
               nytRefreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yükleniyor';
           }
-          const data = await apiFetch(`/news/books/nyt?limit=3`, { etag: !force });
+          const endpoint = force 
+              ? `/news/books/nyt?limit=3&force_refresh=true`
+              : `/news/books/nyt?limit=3`;
+          const data = await apiFetch(endpoint, { etag: !force });
           // Backend şu anda düz bir dizi döndürüyor; ileriye dönük uyumluluk için { items: [] } formatını da destekleyelim
           const items = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
           renderNytReviews(items);
@@ -926,6 +929,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const newBook = await apiFetch('/books', { method: 'POST', body: JSON.stringify({ isbn }) });
             allBooks.unshift(newBook);
+            // Eklendikten sonra ilgili ISBN ve liste ETag önbelleklerini temizle
+            invalidateBookCaches(isbn);
             buildFuseIndex();
             isbnInput.value = '';
             handleSearch();

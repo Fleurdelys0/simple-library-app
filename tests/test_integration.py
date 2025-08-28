@@ -3,10 +3,10 @@ import tempfile
 import os
 from fastapi.testclient import TestClient
 
-from api import app
-from library import Library
-from validators import ISBNValidator, TextValidator
-import database
+from src.api import app
+from src.library import Library
+from utils.validators import ISBNValidator, TextValidator
+import src.database as database
 
 # Mark this module as integration to skip by default
 pytestmark = pytest.mark.integration
